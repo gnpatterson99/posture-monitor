@@ -9,6 +9,25 @@ import argparse
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
+class BodyPoint:
+    def __init__(self, image_width, image_height, pose_landmark):
+        self.image_width = image_width
+        self.image_height = image_height
+        self.pose_landmark = pose_landmark
+        self.x=0
+        self.y=0
+
+    def update(self,lmlandmark):
+        self.x = int(lmlandmark[self.pose_landmark].x * self.image_width)
+        self.y = int(lmlandmark[self.pose_landmark].y * self.image_height)
+
+
+    def __repr__(self):
+        print(self.pose_landmark,"\t", self.x,"\t", self.y)
+
+
+
+
 def findDistance(x1, y1, x2, y2):
     """
     Calculate the Euclidean distance between two points.
@@ -107,7 +126,12 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
         lm = keypoints.pose_landmarks
         lmPose = mp_pose.PoseLandmark
 
+        if lm is None:
+            print("LM is None")
+            continue
+
         # Left shoulder.
+
         l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
         l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
 
@@ -122,6 +146,11 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
         # Left hip.
         l_hip_x = int(lm.landmark[lmPose.LEFT_HIP].x * w)
         l_hip_y = int(lm.landmark[lmPose.LEFT_HIP].y * h)
+
+        # Left hip.
+        r_hip_x = int(lm.landmark[lmPose.RIGHT_HIP].x * w)
+        r_hip_y = int(lm.landmark[lmPose.RIGHT_HIP].y * h)
+
 
         # Calculate distance between left shoulder and right shoulder points.
         offset = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
@@ -143,13 +172,16 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
 
         # Let's take y - coordinate of P3 100px above x1,  for display elegance.
         # Although we are taking y = 0 while calculating angle between P1,P2,P3.
-        cv2.circle(image, (l_shldr_x, l_shldr_y - 100), 7, white, 2)
+#        cv2.circle(image, (l_shldr_x, l_shldr_y - 100), 7, white, 2)
         cv2.circle(image, (r_shldr_x, r_shldr_y), 7, pink, -1)
         cv2.circle(image, (l_hip_x, l_hip_y), 7, yellow, -1)
+        cv2.circle(image, (r_hip_x, r_hip_y), 7, yellow, -1)
+
+        print(r_shldr_y- l_shldr_y,"\t",r_hip_y - l_hip_y)
 
         # Similarly, here we are taking y - coordinate 100px above x1. Note that
         # you can take any value for y, not necessarily 100 or 200 pixels.
-        cv2.circle(image, (l_hip_x, l_hip_y - 100), 7, yellow, -1)
+        # cv2.circle(image, (l_hip_x, l_hip_y - 100), 7, yellow, -1)
 
         # Put text, Posture and angle inclination.
         # Text string for display.
@@ -168,10 +200,10 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
             cv2.putText(image, str(int(torso_inclination)), (l_hip_x + 10, l_hip_y), font, 0.9, light_green, 2)
 
             # Join landmarks.
-            cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), green, 2)
-            cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), green, 2)
-            cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), green, 2)
-            cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), green, 2)
+            # cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), green, 2)
+            # cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), green, 2)
+            # cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), green, 2)
+            # cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), green, 2)
 
         else:
             good_frames = 0
@@ -183,10 +215,10 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
             cv2.putText(image, str(int(torso_inclination)), (l_hip_x + 10, l_hip_y), font, 0.9, red, 2)
 
             # Join landmarks.
-            cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), red, 2)
-            cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), red, 2)
-            cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), red, 2)
-            cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), red, 2)
+            # cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), red, 2)
+            # cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), red, 2)
+            # cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), red, 2)
+            # cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), red, 2)
 
         # Calculate the time of remaining in a particular posture.
         good_time = (1 / fps) * good_frames
