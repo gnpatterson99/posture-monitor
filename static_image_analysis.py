@@ -6,9 +6,19 @@ import math as m
 import mediapipe as mp
 import argparse
 import sys
+import ssl
+
+# This bypasses the SSL certificate verification issue common on macOS
+# when downloading MediaPipe model files.
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
 # mp_drawing = mp.solutions.drawing_utils
 # mp_pose = mp.solutions.pose
-
 
 class BodyPoint:
     def __init__(self, pose_landmark):
@@ -110,7 +120,7 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
     # Initialize mediapipe pose class.
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(  static_image_mode=True,
-               model_complexity=1,)
+               model_complexity=2,)
     # need some additional code to upgrade to 2
 
     # For file input, replace file name with <path>.
