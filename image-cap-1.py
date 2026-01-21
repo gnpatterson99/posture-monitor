@@ -62,7 +62,7 @@ if __name__ == "__main__":
         # need as_posix() to get a string
         fname=path.joinpath(f"posture_{pose_cnt}.jpg").as_posix()
 
-        for i in range(3):
+        for i in range(2):
             print(f"delay loop {i}")
             os.system('afplay /System/Library/Sounds/Ping.aiff')
             # sys.stdout.write('\a')
