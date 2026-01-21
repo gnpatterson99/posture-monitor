@@ -3,7 +3,7 @@ import cv2
 
 def capture_image_from_camera():
     # Create a VideoCapture object. 0 represents the default laptop camera.
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
     # Check if the camera opened successfully
     if not cap.isOpened():
