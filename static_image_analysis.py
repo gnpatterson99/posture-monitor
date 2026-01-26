@@ -1,4 +1,5 @@
 # Ref: https://learnopencv.com/building-a-body-posture-analysis-system-using-mediapipe/
+from pathlib import Path
 
 import cv2
 import time
@@ -6,6 +7,7 @@ import math as m
 import mediapipe as mp
 import argparse
 import sys
+import os
 import ssl
 
 # This bypasses the SSL certificate verification issue common on macOS
@@ -26,11 +28,11 @@ class BodyPoint:
         self.x=0
         self.y=0
 
+
     def update(self,kp):
         self.x = float(kp.pose_landmarks.landmark[self.pose_landmark].x)
         self.y = float(kp.pose_landmarks.landmark[self.pose_landmark].y)
         return self
-
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__, self.__dict__)
@@ -104,7 +106,7 @@ def parse_arguments():
     parser.add_argument('--time-threshold', type=int, default=180, help='Time threshold for triggering a posture alert.')
     return parser.parse_args()
 
-def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_angle_threshold=10, time_threshold=180):
+def main(filename):
 
     # Font type.
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -131,17 +133,14 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
     # Meta.
     # fps = int(cap.get(cv2.CAP_PROP_FPS))
 
-    image = cv2.imread("/Users/george/oreilly/posture-monitor/images/testimage1_raw.jpeg")
-
+#    image = cv2.imread("/Users/george/oreilly/posture-monitor/images/testimage1_raw.jpeg")
+    image = cv2.imread(filename)
 
     if image is None:
-        sys.exit("Could not read the image.")
+        print("Could not read the image.")
+        return
 
     my_image = MyImage(image)
-
-    # cv2.imshow("Display window", image)
-    # Get height and width of the frame.
-    # h, w = image.shape[:2]
 
     # # Convert the BGR image to RGB.
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -156,7 +155,7 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
     my_image.cvt_brg_to_rgb()
     # Process the image.
     keypoints = pose.process(my_image.image)
-    print(keypoints)
+    # print(keypoints)
 
     # Convert the image back to BGR.
     #image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -171,30 +170,33 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
 
     # Left shoulder.
 
-    left_shoulder = BodyPoint(lmPose.LEFT_SHOULDER)
-    left_shoulder.update(keypoints)
-    right_shoulder = BodyPoint(lmPose.RIGHT_SHOULDER)
-    right_shoulder.update(keypoints)
+    left_shoulder = BodyPoint(lmPose.LEFT_SHOULDER).update(keypoints)
+    right_shoulder = BodyPoint(lmPose.RIGHT_SHOULDER).update(keypoints)
 
-    right_hip = BodyPoint(lmPose.RIGHT_HIP)
-    right_hip.update(keypoints)
-    left_hip = BodyPoint(lmPose.LEFT_HIP)
-    left_hip.update(keypoints)
+    right_hip = BodyPoint(lmPose.RIGHT_HIP).update(keypoints)
+    left_hip = BodyPoint(lmPose.LEFT_HIP).update(keypoints)
 
-    right_knee = BodyPoint(lmPose.RIGHT_KNEE)
-    left_knee = BodyPoint(lmPose.LEFT_KNEE)
-    right_knee.update(keypoints)
-    left_knee.update(keypoints)
+    right_knee = BodyPoint(lmPose.RIGHT_KNEE).update(keypoints)
+    left_knee = BodyPoint(lmPose.LEFT_KNEE).update(keypoints)
+
+    left_ankle = BodyPoint(lmPose.LEFT_ANKLE).update(keypoints)
+    right_ankle = BodyPoint(lmPose.RIGHT_ANKLE).update(keypoints)
+
+    left_wrist = BodyPoint(lmPose.LEFT_WRIST).update(keypoints)
+    right_wrist = BodyPoint(lmPose.RIGHT_WRIST).update(keypoints)
+
+    left_elbow = BodyPoint(lmPose.LEFT_ELBOW).update(keypoints)
+    right_elbow = BodyPoint(lmPose.RIGHT_ELBOW).update(keypoints)
 
     left_heel=BodyPoint(lmPose.LEFT_HEEL).update(keypoints)
     right_heel=BodyPoint(lmPose.RIGHT_HEEL).update(keypoints)
     left_foot_index=BodyPoint(lmPose.LEFT_FOOT_INDEX).update(keypoints)
     right_foot_index=BodyPoint(lmPose.RIGHT_FOOT_INDEX).update(keypoints)
 
-    print(left_shoulder)
-    print(right_shoulder)
-    print(right_hip)
-    print(left_hip)
+    # print(left_shoulder)
+    # print(right_shoulder)
+    # print(right_hip)
+    # print(left_hip)
 
     # Calculate distance between left shoulder and right shoulder points.
     # offset = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
@@ -217,12 +219,29 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
     my_image.draw_landmarks(left_hip, yellow)
     my_image.draw_landmarks(right_knee, pink)
     my_image.draw_landmarks(left_knee, pink)
+    my_image.draw_landmarks(left_ankle, white)
+    my_image.draw_landmarks(right_ankle, white)
+    my_image.draw_landmarks(left_wrist, white)
+    my_image.draw_landmarks(right_wrist, white)
+    my_image.draw_landmarks(left_elbow, white)
+    my_image.draw_landmarks(right_elbow, white)
 
     my_image.draw_line(left_shoulder, right_shoulder, green)
+    my_image.draw_line(left_shoulder, left_elbow, green)
+    my_image.draw_line(left_elbow, left_wrist, green)
+
+    my_image.draw_line(right_shoulder, right_elbow, green)
+    my_image.draw_line(right_elbow, right_wrist, green)
+
     my_image.draw_line(left_hip, right_hip, green)
     my_image.draw_line(left_hip, left_knee, green)
-    my_image.draw_line(right_hip, right_knee, green)
+    my_image.draw_line(left_knee, left_ankle, green)
 
+    my_image.draw_line(right_hip, right_knee, green)
+    my_image.draw_line(right_knee, right_ankle, green)
+
+    my_image.draw_line(left_heel, left_foot_index, green)
+    my_image.draw_line(right_heel, right_foot_index, green)
 
     # cv2.circle(image, (l_shldr_x, l_shldr_y), 7, white, 2)
     # cv2.circle(image, (l_ear_x, l_ear_y), 7, white, 2)
@@ -278,11 +297,17 @@ def main(video_path=None, offset_threshold=100, neck_angle_threshold=25, torso_a
 if __name__ == "__main__":
     args = parse_arguments()
     
-    print("Arguments:")
-    print(f"Video: {args.video}")
-    print(f"Offset Threshold: {args.offset_threshold}")
-    print(f"Neck Angle Threshold: {args.neck_angle_threshold}")
-    print(f"Torso Angle Threshold: {args.torso_angle_threshold}")
-    print(f"Time Threshold: {args.time_threshold}")
+    # print("Arguments:")
+    # print(f"Video: {args.video}")
+    # print(f"Offset Threshold: {args.offset_threshold}")
+    # print(f"Neck Angle Threshold: {args.neck_angle_threshold}")
+    # print(f"Torso Angle Threshold: {args.torso_angle_threshold}")
+    # print(f"Time Threshold: {args.time_threshold}")
 
-    main(args.video)
+    path = Path("/Users/george/egoscue/20260124")
+    fnames = path.glob("*.jpeg")
+    for fname in fnames:
+        print(fname.as_posix())
+        main(fname.as_posix())
+
+#    main(args.video)

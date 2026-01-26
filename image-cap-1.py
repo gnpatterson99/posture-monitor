@@ -9,7 +9,16 @@ import sys
 
 def capture_image_from_camera(camera_id=0, filename="captured_image.png",wait_after_show=False):
     # Create a VideoCapture object. 0 represents the default laptop camera.
-    cap = cv2.VideoCapture(camera_id)
+    # cap = cv2.VideoCapture(camera_id)
+
+    cap = cv2.VideoCapture(0, cv2.CAP_AVFOUNDATION)
+
+    # i found these suggeted in a forum post.
+    # frameWidth = 640
+    # frameHeight = 480
+    # cap.set(3, frameWidth)
+    # cap.set(4, frameHeight)
+    # cap.set(10, 150)
 
     # Check if the camera opened successfully
     if not cap.isOpened():
@@ -67,7 +76,7 @@ if __name__ == "__main__":
             os.system('afplay /System/Library/Sounds/Ping.aiff')
             # sys.stdout.write('\a')
             # sys.stdout.flush()
-            time.sleep(1)
+            # time.sleep(1)
         print("Taking Photo....")
         os.system('afplay /System/Library/Sounds/Glass.aiff')
         capture_image_from_camera(filename=fname,wait_after_show=False,camera_id=0)
