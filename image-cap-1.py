@@ -25,6 +25,9 @@ def capture_image_from_camera(camera_id=0, filename="captured_image.png",wait_af
         print("Error: Could not open camera.")
         return
 
+    for i in range(10):
+        cap.read()
+
     # Read a single frame from the camera
     ret, frame = cap.read()
 
