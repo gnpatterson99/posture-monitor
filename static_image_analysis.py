@@ -2,13 +2,12 @@
 from pathlib import Path
 
 import cv2
-import time
 import math as m
 import mediapipe as mp
 import argparse
-import sys
-import os
 import ssl
+
+from ImageObjects import BodyPoint, MyImage
 
 # This bypasses the SSL certificate verification issue common on macOS
 # when downloading MediaPipe model files.
@@ -21,45 +20,6 @@ else:
 
 # mp_drawing = mp.solutions.drawing_utils
 # mp_pose = mp.solutions.pose
-
-class BodyPoint:
-    def __init__(self, pose_landmark):
-        self.pose_landmark = pose_landmark
-        self.x=0
-        self.y=0
-
-
-    def update(self,kp):
-        self.x = float(kp.pose_landmarks.landmark[self.pose_landmark].x)
-        self.y = float(kp.pose_landmarks.landmark[self.pose_landmark].y)
-        return self
-
-    def __repr__(self):
-        return "%s(%r)" % (self.__class__, self.__dict__)
-
-    def __str__(self):
-        return "BP: %d, x=%f,x=%f" % (self.pose_landmark, self.x, self.y)
-
-
-class MyImage:
-    def __init__(self, image):
-        self.image = image
-        self.height, self.width = image.shape[:2]
-        print("Image. height=",self.height, "\twidth=",self.width)
-
-    def draw_landmarks(self, bp, color):
-        cv2.circle(self.image, (int(bp.x * self.width), int(bp.y*self.height)), 7, color, 2)
-
-    def draw_line(self, bp1, bp2, color):
-        cv2.line(self.image, (int(bp1.x * self.width), int(bp1.y*self.height)),
-                 (int(bp2.x * self.width), int(bp2.y*self.height)), color, 2)
-
-    def cvt_brg_to_rgb(self):
-        self.image= cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    def cvt_rgb_to_brg(self):
-        self.image= cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR)
 
 
 def findDistance(x1, y1, x2, y2):
@@ -134,13 +94,19 @@ def main(filename):
     # fps = int(cap.get(cv2.CAP_PROP_FPS))
 
 #    image = cv2.imread("/Users/george/oreilly/posture-monitor/images/testimage1_raw.jpeg")
-    image = cv2.imread(filename)
+#     image = cv2.imread(filename)
+#
+#     if image is None:
+#         print("Could not read the image.")
+#         return
 
-    if image is None:
-        print("Could not read the image.")
-        return
+    my_image = MyImage().read_from_file(filename)
+    xmin = int(my_image.width *0.35)
+    xmax = int(my_image.width*0.65)
+    ymin = 0
+    ymax = int(my_image.height*1.0)
 
-    my_image = MyImage(image)
+    my_image.crop_image(xmin, ymin, xmax, ymax)
 
     # # Convert the BGR image to RGB.
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -170,6 +136,7 @@ def main(filename):
 
     # Left shoulder.
 
+
     left_shoulder = BodyPoint(lmPose.LEFT_SHOULDER).update(keypoints)
     right_shoulder = BodyPoint(lmPose.RIGHT_SHOULDER).update(keypoints)
 
@@ -188,10 +155,10 @@ def main(filename):
     left_elbow = BodyPoint(lmPose.LEFT_ELBOW).update(keypoints)
     right_elbow = BodyPoint(lmPose.RIGHT_ELBOW).update(keypoints)
 
-    left_heel=BodyPoint(lmPose.LEFT_HEEL).update(keypoints)
-    right_heel=BodyPoint(lmPose.RIGHT_HEEL).update(keypoints)
-    left_foot_index=BodyPoint(lmPose.LEFT_FOOT_INDEX).update(keypoints)
-    right_foot_index=BodyPoint(lmPose.RIGHT_FOOT_INDEX).update(keypoints)
+    left_heel= BodyPoint(lmPose.LEFT_HEEL).update(keypoints)
+    right_heel= BodyPoint(lmPose.RIGHT_HEEL).update(keypoints)
+    left_foot_index= BodyPoint(lmPose.LEFT_FOOT_INDEX).update(keypoints)
+    right_foot_index= BodyPoint(lmPose.RIGHT_FOOT_INDEX).update(keypoints)
 
     # print(left_shoulder)
     # print(right_shoulder)
@@ -243,16 +210,6 @@ def main(filename):
     my_image.draw_line(left_heel, left_foot_index, green)
     my_image.draw_line(right_heel, right_foot_index, green)
 
-    # cv2.circle(image, (l_shldr_x, l_shldr_y), 7, white, 2)
-    # cv2.circle(image, (l_ear_x, l_ear_y), 7, white, 2)
-
-    # Let's take y - coordinate of P3 100px above x1,  for display elegance.
-    # Although we are taking y = 0 while calculating angle between P1,P2,P3.
-#        cv2.circle(image, (l_shldr_x, l_shldr_y - 100), 7, white, 2)
-#     cv2.circle(image, (r_shldr_x, r_shldr_y), 7, pink, -1)
-#     cv2.circle(image, (l_hip_x, l_hip_y), 7, yellow, -1)
-#     cv2.circle(image, (r_hip_x, r_hip_y), 7, yellow, -1)
-
     # print(r_shldr_y- l_shldr_y,"\t",r_hip_y - l_hip_y)
 
     # Similarly, here we are taking y - coordinate 100px above x1. Note that
@@ -269,15 +226,7 @@ def main(filename):
 
 
     # cv2.putText(image, angle_text_string_neck, (10, 30), font, 0.6, light_green, 2)
-    # cv2.putText(image, angle_text_string_torso, (10, 60), font, 0.6, light_green, 2)
-    # cv2.putText(image, str(int(neck_inclination)), (l_shldr_x + 10, l_shldr_y), font, 0.9, light_green, 2)
-    # cv2.putText(image, str(int(torso_inclination)), (l_hip_x + 10, l_hip_y), font, 0.9, light_green, 2)
 
-    # Join landmarks.
-    # cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), green, 2)
-    # cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), green, 2)
-    # cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), green, 2)
-    # cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), green, 2)
 
     # Flip the image horizontally for a selfie-view display.
     cv2.imshow('MediaPipe Pose', my_image.image)
