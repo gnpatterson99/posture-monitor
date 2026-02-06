@@ -253,7 +253,7 @@ if __name__ == "__main__":
     # print(f"Torso Angle Threshold: {args.torso_angle_threshold}")
     # print(f"Time Threshold: {args.time_threshold}")
 
-    path = Path("/Users/george/egoscue/20260129")
+    path = Path("/Users/george/egoscue/20260205")
     fnames = path.glob("*.jpg")
     for fname in fnames:
         print(fname.as_posix())

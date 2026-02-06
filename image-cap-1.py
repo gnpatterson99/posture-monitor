@@ -6,6 +6,7 @@ import cv2
 import os
 import sys
 
+project_path="/Users/george/PycharmProjects/posture-monitor/"
 
 def capture_image_from_camera(camera_id=0, filename="captured_image.png",wait_after_show=False):
     # Create a VideoCapture object. 0 represents the default laptop camera.
@@ -76,13 +77,17 @@ if __name__ == "__main__":
 
         for i in range(2):
             print(f"delay loop {i}")
-            os.system('afplay /System/Library/Sounds/Ping.aiff')
+            # os.system('afplay /System/Library/Sounds/Ping.aiff')
+            os.system('afplay ' + project_path + 'sounds/audacity_move.wav')
+
             # sys.stdout.write('\a')
             # sys.stdout.flush()
             # time.sleep(1)
         print("Taking Photo....")
-        os.system('afplay /System/Library/Sounds/Glass.aiff')
+        # os.system('afplay /System/Library/Sounds/Glass.aiff')
+        os.system('afplay ' + project_path + 'sounds/audacity_hold.wav')
         capture_image_from_camera(filename=fname,wait_after_show=False,camera_id=0)
+        os.system('afplay ' + project_path + 'sounds/audacity_donephoto.wav')
 
     print("Done")
 

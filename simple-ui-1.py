@@ -1,5 +1,8 @@
 
-import pyside6
+import PySide6
+from PySide6.QtWidgets import QApplication
+
+
 
 
 
