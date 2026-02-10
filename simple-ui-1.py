@@ -1,9 +1,58 @@
+from PySide6 import QtCore as qtc
+from PySide6 import QtGui as qtg
+from PySide6 import QtWidgets as qtw
+from PySide6.QtCore import QRect
 
-import PySide6
-from PySide6.QtWidgets import QApplication
+from UI_MainWindow.UI.imageMain import Ui_MainWindow
+
+def crop_center(pixmap, target_w, target_h):
+    w = pixmap.width()
+    h = pixmap.height()
+    x = max(0, (w - target_w) // 2)
+    y = max(0, (h - target_h) // 2)
+    cw = min(target_w, w)
+    ch = min(target_h, h)
+    return pixmap.copy(QRect(x, y, cw, ch))
+
+
+class MainWindow(qtw.QMainWindow, Ui_MainWindow):
+
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+
+        self.pb_up.clicked.connect(self.load_up)
+        self.pb_down.clicked.connect(self.load_down)
+        self.pb_right.clicked.connect(self.load_right)
+        self.pb_left.clicked.connect(self.load_left)
+        self.pb_exit.clicked.connect(qtc.QCoreApplication.instance().quit)
+
+
+    def image_load_and_show(self, icount):
+#        self.message_label.setText(f"Loading image {icount}")
+        pixmap = qtg.QPixmap(f"/Users/george/egoscue/20260131/posture_{icount}.jpg")
+        pixmap2 = crop_center(pixmap, 751, 1121)
+        self.lw_image.setPixmap(pixmap2)
+
+    def load_up(self):
+        self.image_load_and_show(0)
+
+    def load_down(self):
+        self.image_load_and_show(2)
+
+    def load_right(self):
+        self.image_load_and_show(1)
+
+    def load_left(self):
+        self.image_load_and_show(3)
 
 
 
+if __name__ == "__main__":
+    app = qtw.QApplication([])
+    window = MainWindow()
+    window.show()
+    app.exec()
 
 
 
