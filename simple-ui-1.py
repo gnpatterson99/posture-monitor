@@ -19,18 +19,31 @@ class MainWindow(qtw.QMainWindow, Ui_MainWindow):
 
     def __init__(self):
         super().__init__()
+        self._date = qtc.QDate.currentDate().toString('yyyyMMdd')
         self.setupUi(self)
+        self.dateEdit.setDate(qtc.QDate.currentDate())
 
         self.pb_up.clicked.connect(self.load_up)
         self.pb_down.clicked.connect(self.load_down)
         self.pb_right.clicked.connect(self.load_right)
         self.pb_left.clicked.connect(self.load_left)
         self.pb_exit.clicked.connect(qtc.QCoreApplication.instance().quit)
+        self.pb_set_date.clicked.connect(self.set_date)
 
+    @qtc.Slot()
+    def set_date(self):
+        self._date = self.dateEdit.date().toString('yyyyMMdd')
+        print('Setting self._date to', self._date, '')
+        self.load_up()
 
     def image_load_and_show(self, icount):
 #        self.message_label.setText(f"Loading image {icount}")
-        pixmap = qtg.QPixmap(f"/Users/george/egoscue/20260131/posture_{icount}.jpg")
+        pixmap = qtg.QPixmap(f"/Users/george/egoscue/{self._date}/posture_{icount}.jpg")
+        if pixmap.isNull():
+            print("Could not load image")
+            self.statusBar().showMessage(f"Could not load image for date {self._date}")
+            return
+
         pixmap2 = crop_center(pixmap, 751, 1121)
         self.lw_image.setPixmap(pixmap2)
 
