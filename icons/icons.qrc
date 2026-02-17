@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="buttons">
+    <file>sampleimage.png</file>
+    <file>arrow-circle-up.png</file>
+    <file>arrow-circle-right.png</file>
+    <file>arrow-circle-left.png</file>
+    <file>arrow-circle-down.png</file>
+  </qresource>
+</RCC>
